@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キャンプ履歴</title>
+<style>
+  :root {
+    --blue: #1F5C8B;
+    --blue-light: #EBF2FA;
+    --green-light: #E2F0D9;
+    --green-dark: #538135;
+    --orange: #C55A11;
+    --grey: #F2F2F2;
+    --grey-text: #888;
+    --border: #dce3ec;
+    --white: #fff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f0f4f8;
+    color: #222;
+    font-size: 14px;
+  }
+  header {
+    background: var(--blue);
+    color: #fff;
+    padding: 16px 16px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  header p { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+  .stats { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+  .stat-badge {
+    background: rgba(255,255,255,0.18);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .search-bar {
+    background: #fff;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 14px;
+    outline: none;
+    background: #f8fafd;
+  }
+  .search-bar input:focus { border-color: var(--blue); }
+
+  .filter-row {
+    background: #fff;
+    padding: 8px 14px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label { font-size: 11px; color: var(--grey-text); font-weight: 600; }
+  .filter-btn {
+    border: 1.5px solid var(--border);
+    background: #fff;
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #444;
+  }
+  .filter-btn.active, .filter-btn:active {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+  }
+
+  .camp-list {
+    padding: 12px 12px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: transform 0.1s;
+  }
+  .card.revisit { border-left: 4px solid var(--green-dark); }
+  .card.cancelled { opacity: 0.55; border-left: 4px solid #bbb; }
+
+  .card-header {
+    padding: 12px 14px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card.revisit .card-header { background: var(--green-light); }
+  .card.cancelled .card-header { background: var(--grey); }
+
+  .card-left { flex: 1; min-width: 0; }
+  .card-number { font-size: 10px; color: var(--grey-text); font-weight: 600; margin-bottom: 1px; }
+  .card-name { font-size: 16px; font-weight: 700; color: var(--blue); line-height: 1.25; }
+  .card-sub { font-size: 12px; color: #555; margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .card-pref { background: #e8f0f8; color: var(--blue); border-radius: 8px; padding: 2px 8px; font-size: 11px; }
+  .card-date { color: var(--grey-text); }
+
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .stars { color: var(--orange); font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+  .badge-revisit {
+    font-size: 10px;
+    background: var(--green-dark);
+    color: #fff;
+    border-radius: 8px;
+    padding: 1px 7px;
+    font-weight: 700;
+  }
+  .badge-cancel {
+    font-size: 10px;
+    background: #999;
+    color: #fff;
+    border-radius: 8px;
+    padding: 1px 7px;
+    font-weight: 700;
+  }
+  .chevron {
+    font-size: 12px;
+    color: var(--grey-text);
+    margin-top: 2px;
+    transition: transform 0.2s;
+  }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .tags {
+    padding: 0 14px 10px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: #e8f0f8;
+    color: var(--blue);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .card.cancelled .tag { background: #eee; color: #888; }
+
+  .card-details {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 12px 14px;
+    background: #fafcff;
+  }
+  .card.open .card-details { display: block; }
+
+  .memo-box {
+    background: #fffbe8;
+    border-left: 3px solid var(--orange);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .info-item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .info-item.full { grid-column: 1 / -1; }
+  .info-icon { font-size: 15px; margin-right: 4px; }
+  .info-label { font-size: 10px; color: var(--grey-text); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .info-value { font-size: 12px; color: #333; line-height: 1.5; }
+
+  .no-results {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--grey-text);
+    font-size: 14px;
+  }
+
+  .sort-row {
+    background: #fff;
+    padding: 6px 14px 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #555;
+  }
+  .sort-row select {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 12px;
+    background: #fff;
+    outline: none;
+    cursor: pointer;
+  }
+  .result-count { margin-left: auto; font-size: 11px; color: var(--grey-text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏕 キャンプ履歴</h1>
+  <p>出典: Gmailメール「キャンプ」(2026/3/20) ※ウェブ情報は2026年3月時点</p>
+  <div class="stats">
+    <span class="stat-badge">全37件</span>
+    <span class="stat-badge">🔁 リピート12件</span>
+    <span class="stat-badge">📍 7都道府県</span>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="search" id="searchInput" placeholder="🔍 キャンプ場名・都道府県・メモで検索…" oninput="applyFilters()">
+</div>
+
+<div class="filter-row">
+  <span class="filter-label">フィルター：</span>
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">すべて</button>
+  <button class="filter-btn" data-filter="revisit" onclick="setFilter('revisit', this)">🔁 リピート</button>
+  <button class="filter-btn" data-filter="star5" onclick="setFilter('star5', this)">★5</button>
+  <button class="filter-btn" data-filter="star4" onclick="setFilter('star4', this)">★4以上</button>
+  <button class="filter-btn" data-filter="shiga" onclick="setFilter('shiga', this)">滋賀</button>
+  <button class="filter-btn" data-filter="hyogo" onclick="setFilter('hyogo', this)">兵庫</button>
+  <button class="filter-btn" data-filter="kyoto" onclick="setFilter('kyoto', this)">京都</button>
+  <button class="filter-btn" data-filter="nara" onclick="setFilter('nara', this)">奈良</button>
+</div>
+
+<div class="sort-row">
+  <span>並べ替え：</span>
+  <select onchange="applyFilters()" id="sortSelect">
+    <option value="num">番号順</option>
+    <option value="rating_desc">おすすめ度 高い順</option>
+    <option value="recent">新しい順</option>
+    <option value="name">名前順</option>
+  </select>
+  <span class="result-count" id="resultCount">37件表示</span>
+</div>
+
+<div class="camp-list" id="campList"></div>
+
+<script>
+const camps = [
+  {no:1, date:"2023/7/30", name:"OKオートキャンプ", pref:"三重県伊賀市", revisit:false, stars:4, tags:["川遊び","温泉近く","区画整理"], memo:"川遊びができる。区画整理されたキャンプ場。スタッフの管理も行き届いてる。温泉は車で3分。", address:"三重県伊賀市島ヶ原12428", bathing:"場内シャワー室あり。近隣に赤目温泉（約20km圏内）", price:"約5,400円（サイト2,500円+大人1,000円×2+子供300円×2）", playground:"あり（馬とのふれあい、釣り、クラフト）", shop:"充実（薪・炭・氷・調味料・雑貨等）", firewood:"550円/束", rating:"★4.18（Yahoo!マップ）", checkin:"13:00", checkout:"12:00", distance:"約120km / 約2時間（高速）"},
+  {no:2, date:"2023/8/19", name:"ガリバー青少年旅行村", pref:"滋賀県高島市", revisit:false, stars:3, tags:["遊具多い","草が多い"], memo:"遊具多いがサイトからは遠め。夏場は草ボーボー。", address:"滋賀県高島市安曇川町鹿ケ瀬", bathing:"近隣に温泉あり（詳細要確認）", price:"約3,600円（サイト+入村料400円×4）", playground:"充実（大型遊具多数、アスレチック、天文台）", shop:"簡易（近隣スーパーまで約20分）", firewood:"不明", rating:"不明", checkin:"13:00", checkout:"11:00", distance:"約80km / 約1時間30分（高速）"},
+  {no:3, date:"2023/10/9", name:"グリーンパーク山東", pref:"滋賀県米原市", revisit:false, stars:5, tags:["アドベンチャー","水遊び","温泉","遊具"], memo:"ドラゴンスライダーやフォレストアドベンチャー（有料）など小学生大喜び。近隣の公園、ボール広場、人工池での水遊び。温泉徒歩圏内。", address:"滋賀県米原市池下80-1", bathing:"場内に内風呂・露天風呂・サウナ完備（大人700円祝日、小人400円）", price:"約22,000〜26,000円（入場料・サイト料・入浴料含む）", playground:"充実（ドラゴンスライダー、フォレストアドベンチャー有料、人工池、広場）", shop:"充実（レンタル用品、薪・炭・食品等）", firewood:"770円/束", rating:"★3.93（95件）- なっぷ", checkin:"13:00", checkout:"11:00", distance:"約90km / 約1時間（高速・名神米原IC）"},
+  {no:4, date:"2023/11/25", name:"ウェルネスパーク五色", pref:"兵庫県洲本市（淡路島）", revisit:false, stars:4, tags:["遊具","温泉"], memo:"広場に遊具、ボール遊び。温泉徒歩圏内。", address:"兵庫県洲本市五色町都志1087", bathing:"場内に五色温泉「ゆ～ゆ～ファイブ」（10種の風呂）あり", price:"約10,000〜12,000円（サイト4,950〜5,500円+温泉料）", playground:"あり（わんぱく広場）", shop:"普通（モンベル売店あり、薪販売なし）", firewood:"販売なし", rating:"★4.0程度 - なっぷ", checkin:"14:00", checkout:"11:00", distance:"約87km / 約54分（高速・神戸淡路鳴門道）"},
+  {no:5, date:"2024/3/9", name:"konzeかもしかキャンピングヴィレッジ", pref:"滋賀県栗東市", revisit:false, stars:4, tags:["手作り遊具","子供見守りやすい"], memo:"手作り遊具。子供を見守りやすい設計。自販機あり。", address:"滋賀県栗東市観音寺550", bathing:"場内シャワーあり。近隣に温泉（詳細要確認）", price:"約16,000〜20,000円（サイト料金）", playground:"あり（ジップライン、ハンモック）", shop:"充実", firewood:"不明（受付で購入可）", rating:"高評価 - なっぷ", checkin:"13:00", checkout:"11:00", distance:"約39km / 約47分（高速）"},
+  {no:6, date:"2024/4/13", name:"かもしかex", pref:"滋賀県甲賀市", revisit:false, stars:3, tags:["動物ふれあい","サウナ"], memo:"動物ふれあいコーナーあり。", address:"滋賀県甲賀市土山町大河原1529-1", bathing:"サウナあり（無料）。近隣に大河原温泉かもしか荘（日帰り利用可）", price:"約5,000〜8,000円（サイトグレードにより異なる）", playground:"あり（ジップライン、ツリーハウス、ハンモック）", shop:"不明", firewood:"1,200円/8kg", rating:"不明", checkin:"13:00", checkout:"11:00", distance:"約70km / 約1時間30分（高速）"},
+  {no:7, date:"2024/4/20", name:"かもしか葛川", pref:"滋賀県大津市", revisit:false, stars:4, tags:["森","人工池"], memo:"森のキャンプ。人工池あり。自販機あり。", address:"滋賀県大津市葛川坊村町193", bathing:"近隣にくつき温泉てんくう（約25分）", price:"不明", playground:"不明", shop:"不明", firewood:"不明", rating:"★5.0（Google Maps）", checkin:"13:00", checkout:"11:00", distance:"約65km / 約1時間（高速・真野IC）"},
+  {no:8, date:"2024/4/28", name:"やまもりサーキット", pref:"兵庫県丹波篠山市", revisit:false, stars:4, tags:["カートサーキット","体育館","温泉"], memo:"真ん中にカートのサーキットあり。体育館開放。温泉徒歩圏内。", address:"兵庫県丹波篠山市遠方石ン堂41-1", bathing:"場内なし。徒歩1分に草山温泉「やまもりの湯」", price:"不明（要確認）", playground:"充実（ペダルゴーカート、アスレチック、体育館開放）", shop:"充実", firewood:"不明", rating:"★4.5程度 - なっぷ", checkin:"13:00", checkout:"11:00", distance:"約51km / 約39分（高速）"},
+  {no:9, date:"2024/5/5", name:"森のひととき", pref:"兵庫県丹波市", revisit:false, stars:5, tags:["カヤック","温泉無料","朝食バイキング"], memo:"カヤック、キャンプファイヤー、手作り遊具など豊富。温泉無料。朝食バイキングあり。", address:"兵庫県丹波市市島町与戸字長尾52-1", bathing:"場内温泉あり（宿泊者利用可）", price:"不明（要確認）", playground:"あり（カヤック、キャンプファイヤー、手作り遊具）", shop:"充実（レストラン、売店、朝食バイキングあり）", firewood:"不明", rating:"不明 - じゃらん掲載", checkin:"13:00", checkout:"11:00", distance:"約60km / 約45分（高速）"},
+  {no:10, date:"2024/6/1", name:"まほろばの湯オートキャンプ場", pref:"兵庫県宍粟市", revisit:false, stars:4, tags:["温泉併設","乗り物乗り放題"], memo:"温泉併設。整地されたキャンプサイト。ストライダー・セグウェイ的な乗り物が乗り放題。近隣の公園は鹿のふんだらけ。", address:"兵庫県宍粟市一宮町三方町685", bathing:"場内なし。徒歩5分に「一宮温泉まほろばの湯」（温泉併設）", price:"約15,000〜20,000円（サイト5,000〜9,000円+温泉等）", playground:"あり（芝生広場、電動キックボード等）", shop:"充実", firewood:"販売あり（価格要確認）", rating:"★5.0 - なっぷ", checkin:"14:00", checkout:"12:00", distance:"約100km / 約1時間10分（高速）"},
+  {no:11, date:"2024/6/15", name:"かさとぴあ", pref:"京都府宇治市", revisit:false, stars:2, tags:["ふわふわドーム","オートサイト最悪"], memo:"唯一のオートサイトは最悪2度といかない。宿泊者の駐車場の傍にポツン。ふわふわドーム使い放題。シャワー室横の休憩室広くて遊べる。", address:"京都府宇治市西笠取黒出5-1", bathing:"場内なし。近隣温泉要確認", price:"約15,000〜20,000円（ロッジ利用時）", playground:"あり（ふわふわドーム、アスレチック、川遊び）", shop:"充実（ピザ窯・カフェ併設）", firewood:"不明", rating:"不明", checkin:"13:00", checkout:"11:00", distance:"約35km / 約35分（高速）"},
+  {no:12, date:"2024/7/14", name:"近江いこいの広場", pref:"滋賀県長浜市", revisit:false, stars:0, tags:["中止"], memo:"【中止】", address:"滋賀県長浜市木之本町大見678（大見いこいの広場）", bathing:"場内浴室あり（詳細要確認）", price:"約4,400〜5,500円（オートサイト）", playground:"あり（テニスコート、アスレチック、川遊び）", shop:"普通（薪・炭・食品等）", firewood:"販売あり", rating:"不明", checkin:"13:00", checkout:"12:00", distance:"約75km / 約1時間30分（高速・北陸道木之本IC）"},
+  {no:13, date:"2024/7/20", name:"美山町自然文化村", pref:"京都府南丹市", revisit:false, stars:3, tags:["川遊び"], memo:"川遊びできる。サイトに鹿のフン。", address:"京都府南丹市美山町中下向56", bathing:"場内露天温泉あり（河鹿荘併設）", price:"約9,000〜14,000円（オートサイト）", playground:"あり（川遊び、周辺アクティビティ）", shop:"充実（河鹿荘の売店）", firewood:"600円/束", rating:"高評価 - なっぷ", checkin:"15:00", checkout:"14:00", distance:"約65km / 約1時間（高速）"},
+  {no:14, date:"2024/7/27", name:"マイアミ浜", pref:"滋賀県野洲市", revisit:false, stars:3, tags:["琵琶湖","夏はおすすめしない"], memo:"琵琶湖で遊び放題。サイトに木が生えてるのでレイアウト難しい。妻は「夏には行きたくない」とのこと。", address:"滋賀県野洲市吉川3326-1", bathing:"温水シャワー（A区画完備）、近隣にマイアミ浜温泉あり", price:"約14,000〜18,000円（オートサイト）", playground:"あり（アスレチック、ブランコ、琵琶湖湖畔）", shop:"充実（コールマン製品・燃料・薪・炭等）", firewood:"450円/束", rating:"★4.38（60件）- Yahoo!マップ", checkin:"14:00", checkout:"12:00", distance:"約55km / 約45分（高速・名神栗東IC）"},
+  {no:15, date:"2024/8/11", name:"奈良平成榛原オートキャンプ", pref:"奈良県宇陀市", revisit:false, stars:3, tags:["フリーサイト","遊具（恐竜）","温泉近く"], memo:"フリーサイト。丘に遊具（恐竜モチーフ）。近くに温泉あり。出入り口付近の道路が狭すぎ（間違った行き方でした）。", address:"奈良県宇陀市榛原檜牧2107-4", bathing:"場内シャワーあり。近隣温泉5分以内", price:"約15,000〜18,000円（フリーサイト3,300円+入場料2,000円+オプション）", playground:"あり（恐竜モチーフアスレチック、水遊び場5〜9月）", shop:"充実（地元産品・ドリンク）", firewood:"不明", rating:"なっぷ掲載・好評", checkin:"13:00", checkout:"10:00〜11:00", distance:"約70〜80km / 約2時間（高速）"},
+  {no:16, date:"2024/8/17", name:"みつえ青少年旅行村", pref:"奈良県御杖村", revisit:false, stars:4, tags:["あゆつかみ","ボブスレー","釣り堀"], memo:"あゆつかみ、釣り堀。ボブスレー。丘に遊具。", address:"奈良県宇陀郡御杖村神末1790", bathing:"場内浴室あり（200円、17:00〜21:00）、近隣「みつえ温泉姫石の湯」", price:"約12,000〜16,000円（テント1,500〜3,500円+入場料等）", playground:"充実（140mジャンボローラー滑り台、ボブスレー、アスレチック9基、釣り堀）", shop:"普通〜充実（薪・炭・飲料・軽食・川遊び用品）", firewood:"販売あり（価格要確認）", rating:"好評多数 - なっぷ", checkin:"12:00", checkout:"10:00", distance:"約70〜80km / 約2時間（高速）"},
+  {no:17, date:"2024/9/15", name:"かもしか荘", pref:"滋賀県甲賀市", revisit:true, stars:5, tags:["忍者","手作り遊具","川遊び","丁寧な接客"], memo:"宿泊施設と併設で対応が丁寧。夕方に忍者が来る。手作り遊具がたくさん。川遊びもできる。", address:"滋賀県甲賀市土山町大河原1104", bathing:"隣接かもしか荘で利用可（大人800円、65歳以上700円、子供400円）", price:"約18,000〜22,000円（サイト料+温泉利用料含む）", playground:"充実（ジャグジー、ジップライン、手作り遊具多数）", shop:"充実（薪・炭・オリジナルグッズ等）", firewood:"1,200円/束", rating:"高評価 - なっぷ", checkin:"15:00", checkout:"11:00", distance:"約70km / 約1時間20分（高速）"},
+  {no:18, date:"2024/9/22", name:"のかみふれあい自然公園", pref:"和歌山県紀美野町", revisit:false, stars:3, tags:["公園・広場","標高高い","温泉遠い"], memo:"公園、広場たくさん。標高高い。温泉遠い。", address:"和歌山県海草郡紀美野町西野971-1", bathing:"場内シャワー施設あり（200円）。近隣温泉は遠い", price:"約11,000〜13,000円（区画3,140円+施設料2,480円前後）", playground:"あり（わんぱく広場・巨大遊具、パークゴルフ場）", shop:"充実（ふれあい館で地元農産品・軽食・カレー等）", firewood:"不明（直火禁止の可能性あり）", rating:"★4.2（39件）- じゃらん", checkin:"13:00", checkout:"11:00", distance:"約100〜120km / 約2時間30分（高速）"},
+  {no:19, date:"2024/10/12", name:"しあわせの村", pref:"兵庫県神戸市北区", revisit:false, stars:3, tags:["公園多い","インター直結","やや騒がしい"], memo:"インター直結。公園たくさん。温泉も敷地内だが車で行く。近所の子連れが多いのか騒がしかった。", address:"兵庫県神戸市北区山田町下谷上中一里山14", bathing:"敷地内にリゾート温泉あり（車で移動）", price:"約10,000〜15,000円（オートキャンプ）", playground:"充実（アスレチック「ボウケンノモリ」、公園多数）", shop:"充実（コンビニ「しあわせマルシェ」あり）", firewood:"不明", rating:"★4.0程度 - なっぷ", checkin:"13:00", checkout:"11:00", distance:"約45km / 約27分（高速）"},
+  {no:20, date:"2024/10/19", name:"グリーンパーク山東", pref:"滋賀県米原市", revisit:true, stars:5, tags:["アドベンチャー","水遊び","温泉"], memo:"2回目（リピート）。", address:"滋賀県米原市池下80-1", bathing:"場内に内風呂・露天風呂・サウナ完備（大人700円祝日、小人400円）", price:"約22,000〜26,000円（入場料・サイト料・入浴料含む）", playground:"充実（ドラゴンスライダー、フォレストアドベンチャー有料、人工池、広場）", shop:"充実（レンタル用品、薪・炭・食品等）", firewood:"770円/束", rating:"★3.93（95件）- なっぷ", checkin:"13:00", checkout:"11:00", distance:"約90km / 約1時間（高速・名神米原IC）"},
+  {no:21, date:"2024/11/9", name:"アクトパル宇治", pref:"京都府宇治市", revisit:false, stars:3, tags:["温泉徒歩","フリーサイト","トイレ遠い"], memo:"フリーサイト。トイレめっちゃ遠い。炊事場もめっちゃ遠い。温泉は徒歩。綺麗。", address:"京都府宇治市西笠取辻出川西1番地", bathing:"施設内浴室あり（徒歩圏内）", price:"約8,000〜12,000円（テントサイト宿泊料）", playground:"あり（無料アスレチック、川遊び、グラウンドゴルフ）", shop:"普通（売店・食堂あり）", firewood:"販売あり（価格要確認）", rating:"不明", checkin:"10:00", checkout:"09:30", distance:"約30km / 約35分（高速）"},
+  {no:22, date:"2024/12/7", name:"かもしか荘", pref:"滋賀県甲賀市", revisit:true, stars:4, tags:["手作り遊具","川遊び"], memo:"2回目（リピート）。", address:"滋賀県甲賀市土山町大河原1104", bathing:"隣接かもしか荘で利用可（大人800円、65歳以上700円、子供400円）", price:"約18,000〜22,000円（サイト料+温泉利用料含む）", playground:"充実（ジャグジー、ジップライン、手作り遊具多数）", shop:"充実（薪・炭・オリジナルグッズ等）", firewood:"1,200円/束", rating:"高評価 - なっぷ", checkin:"15:00", checkout:"11:00", distance:"約70km / 約1時間20分（高速）"},
+  {no:23, date:"2025/4/26", name:"konzeかもしかキャンピングヴィレッジ", pref:"滋賀県栗東市", revisit:true, stars:4, tags:["手作り遊具","子供見守りやすい"], memo:"2回目（リピート）。", address:"滋賀県栗東市観音寺550", bathing:"場内シャワーあり。近隣に温泉（詳細要確認）", price:"約16,000〜20,000円（サイト料金）", playground:"あり（ジップライン、ハンモック）", shop:"充実", firewood:"不明（受付で購入可）", rating:"高評価 - なっぷ", checkin:"13:00", checkout:"11:00", distance:"約39km / 約47分（高速）"},
+  {no:24, date:"2025/5/3", name:"奈良平成榛原オートキャンプ", pref:"奈良県宇陀市", revisit:true, stars:3, tags:["フリーサイト","遊具","高額化","混雑"], memo:"2回目。民間事業になってめっちゃ高くなった。そして人も多くなって行きづらい。", address:"奈良県宇陀市榛原檜牧2107-4", bathing:"場内シャワーあり。近隣温泉5分以内", price:"約15,000〜18,000円（フリーサイト3,300円+入場料2,000円+オプション）", playground:"あり（恐竜モチーフアスレチック、水遊び場5〜9月）", shop:"充実（地元産品・ドリンク）", firewood:"不明", rating:"なっぷ掲載・好評", checkin:"13:00", checkout:"10:00〜11:00", distance:"約70〜80km / 約2時間（高速）"},
+  {no:25, date:"2025/5/17", name:"やまもりサーキット", pref:"兵庫県丹波篠山市", revisit:true, stars:4, tags:["カートサーキット","体育館","温泉"], memo:"2回目（リピート）。", address:"兵庫県丹波篠山市遠方石ン堂41-1", bathing:"場内なし。徒歩1分に草山温泉「やまもりの湯」", price:"不明（要確認）", playground:"充実（ペダルゴーカート、アスレチック、体育館開放）", shop:"充実", firewood:"不明", rating:"★4.5程度 - なっぷ", checkin:"13:00", checkout:"11:00", distance:"約51km / 約39分（高速）"},
+  {no:26, date:"2025/5/31", name:"そうぞうのすみか", pref:"兵庫県神戸市（六甲山）", revisit:false, stars:4, tags:["アスレチック","カヌー","レストラン"], memo:"新しいオートサイト。山道直結。おしゃれレストランあり。カヌーなどの湖遊びあり。地獄のアスレチックがある（マジでやばい）。カレー美味しくない。", address:"兵庫県神戸市灘区六甲山町中一里山1-1", bathing:"場内シャワー施設あり。近隣温泉要確認", price:"不明（要確認）", playground:"充実（地獄のアスレチック、カヌー等）", shop:"充実（おしゃれカフェ・レストランあり）", firewood:"不明", rating:"不明（2024年4月開設の新施設）", checkin:"14:00", checkout:"11:00", distance:"約50〜55km / 約30〜40分（高速）"},
+  {no:27, date:"2025/6/7", name:"十二坊温泉キャンプ場", pref:"滋賀県湖南市", revisit:false, stars:4, tags:["屋内プール","温泉","ラスク絶品"], memo:"屋内プールあり。温泉徒歩圏内。めっちゃうまいラスクあり。", address:"滋賀県湖南市岩根678-28", bathing:"場内天然温泉あり（露天風呂・サウナ・ジャグジー・屋内プール）", price:"約18,000〜24,000円（サイト料+温泉利用料含む）", playground:"充実（アスレチック、屋内プール、川遊び）", shop:"充実（ラスク等名物品あり）", firewood:"850円/5kg束", rating:"好評 - なっぷ", checkin:"13:00", checkout:"12:00", distance:"約55km / 約50分（高速）"},
+  {no:28, date:"2025/6/21", name:"洞川キャンプ場", pref:"奈良県天川村", revisit:false, stars:4, tags:["ソロ","温泉街","水綺麗","標高800m"], memo:"【ソロ】標高800m。車で5分で温泉街・めっちゃノスタルジー。水綺麗。", address:"奈良県吉野郡天川村洞川", bathing:"場内温水シャワーあり。洞川温泉センター（600円）、温泉街（車5分）", price:"約8,000〜11,000円（入村料400円+テント1,500円〜+温泉等）", playground:"なし（周辺に観光・散策スポット）", shop:"普通（薪・炭・飲料・菓子・インスタント麺）", firewood:"500〜700円", rating:"好評多数 - なっぷ", checkin:"11:00", checkout:"10:30", distance:"約120km / 約2時間30分（高速）"},
+  {no:29, date:"2025/6/28", name:"ユニトピア篠山", pref:"兵庫県丹波篠山市", revisit:false, stars:3, tags:["広大サイト","アスレチック","温泉送迎","高額"], memo:"100㎡越えのオートサイト、めちゃ広い。アスレチックあり（有料）。園内バスで温泉まで送迎。息子が林間学校で行った。ただ高い。", address:"兵庫県丹波篠山市矢代231-1", bathing:"場内光明石温泉あり（有料、月替わり薬湯）、園内バス送迎", price:"不明（要確認・高額との口コミ）", playground:"充実（アスレチック有料、釣り堀、屋外プール）", shop:"充実（レストラン・軽食あり）", firewood:"不明", rating:"★5.0 - なっぷ", checkin:"不明（要確認）", checkout:"不明（要確認）", distance:"約51km / 約39分（高速）"},
+  {no:30, date:"2025/夏", name:"十二坊温泉キャンプ場", pref:"滋賀県湖南市", revisit:true, stars:3, tags:["屋内プール","混雑"], memo:"2回目。室内プールで泳ぐ。日帰り客も多いのでかなり混雑。", address:"滋賀県湖南市岩根678-28", bathing:"場内天然温泉あり（露天風呂・サウナ・ジャグジー・屋内プール）", price:"約18,000〜24,000円（サイト料+温泉利用料含む）", playground:"充実（アスレチック、屋内プール、川遊び）", shop:"充実（ラスク等名物品あり）", firewood:"850円/5kg束", rating:"好評 - なっぷ", checkin:"13:00", checkout:"12:00", distance:"約55km / 約50分（高速）"},
+  {no:31, date:"2025/夏", name:"南光自然観察村", pref:"兵庫県佐用町", revisit:false, stars:4, tags:["川遊び","広い","ツリーハウス","浴室あり"], memo:"川遊びがメイン。かなり広いキャンプ場。ツリーハウスやバンガローも豊富。場内に浴室あり。日帰り客のサイト横断が多め。夜:チキンカレー、朝:チーズバーガートルティーヤ。", address:"兵庫県佐用郡佐用町船越222", bathing:"場内大浴場あり", price:"約10,000〜15,000円（入村料500円+サイト料2,000〜5,000円+温泉等）", playground:"あり（ツリーハウス、川遊び）", shop:"普通", firewood:"不明", rating:"★4.48（22件）- なっぷ", checkin:"14:00", checkout:"13:00", distance:"約130km / 約1時間32分（高速）"},
+  {no:32, date:"2025/夏", name:"ユニトピア篠山", pref:"兵庫県丹波篠山市", revisit:true, stars:3, tags:["広大サイト","高額"], memo:"2回目。夜:冷やし中華。朝:トルティーヤカビだらけ→レタス巻、ウインナー焼き。", address:"兵庫県丹波篠山市矢代231-1", bathing:"場内光明石温泉あり（有料、月替わり薬湯）、園内バス送迎", price:"不明（要確認・高額との口コミ）", playground:"充実（アスレチック有料、釣り堀、屋外プール）", shop:"充実（レストラン・軽食あり）", firewood:"不明", rating:"★5.0 - なっぷ", checkin:"不明（要確認）", checkout:"不明（要確認）", distance:"約51km / 約39分（高速）"},
+  {no:33, date:"2025/秋", name:"谷瀬吊り橋オートキャンプ場", pref:"奈良県十津川村", revisit:false, stars:3, tags:["吊り橋","川遊び","リーズナブル","設備チープ"], memo:"谷瀬の大吊り橋を眺める川沿いキャンプ場。とても迫力があって良い！非常にリーズナブル。安いだけに設備はかなりチープ。温泉なし（シャワー室のみ）。", address:"奈良県吉野郡十津川村上野地", bathing:"五右衛門風呂・温水シャワーあり（温泉ではない）。近隣に十津川温泉", price:"約8,000〜11,000円（入場料800円+テント1,000円+駐車料1,000円）", playground:"なし（川遊び・谷瀬吊り橋観光）", shop:"簡易（薪・炭・氷・ジュース）", firewood:"600円/束", rating:"高評価多数 - なっぷ", checkin:"6:00（フリーサイト）/11:00（バンガロー）", checkout:"17:00（フリーサイト）/10:00（バンガロー）", distance:"約140km / 約3時間（高速）"},
+  {no:34, date:"2025/10/12", name:"十二坊温泉キャンプ場", pref:"滋賀県湖南市", revisit:true, stars:4, tags:["屋内プール","温泉","過ごしやすい"], memo:"特記事項なし。相変わらず過ごしやすい。広場でサッカーやバドミントン。遊具がなくても子供が楽しめる様になってきた。", address:"滋賀県湖南市岩根678-28", bathing:"場内天然温泉あり（露天風呂・サウナ・ジャグジー・屋内プール）", price:"約18,000〜24,000円（サイト料+温泉利用料含む）", playground:"充実（アスレチック、屋内プール、川遊び）", shop:"充実（ラスク等名物品あり）", firewood:"850円/5kg束", rating:"好評 - なっぷ", checkin:"13:00", checkout:"12:00", distance:"約55km / 約50分（高速）"},
+  {no:35, date:"2025/10/18", name:"まほろばの湯オートキャンプ場", pref:"兵庫県宍粟市", revisit:true, stars:4, tags:["温泉併設","公園","キックボード"], memo:"電動キックボードはバッテリー故障で撤去（手動キックボードはあり）。広い公園でバドミントン。", address:"兵庫県宍粟市一宮町三方町685", bathing:"場内なし。徒歩5分に「一宮温泉まほろばの湯」（温泉併設）", price:"約15,000〜20,000円（サイト5,000〜9,000円+温泉等）", playground:"あり（芝生広場、電動キックボード等）", shop:"充実", firewood:"販売あり（価格要確認）", rating:"★5.0 - なっぷ", checkin:"14:00", checkout:"12:00", distance:"約100km / 約1時間10分（高速）"},
+  {no:36, date:"2025/11/24", name:"白浜荘オートキャンプ場", pref:"滋賀県高島市", revisit:false, stars:4, tags:["琵琶湖岸サイト","温泉","チェックアウト12時"], memo:"Aサイトをとると湖岸サイト。夏場は水遊びできる。チェックアウト12時でゆったり。温泉あり（遅れると入れない）。遊具なし。近くにこどもの国あり。湖西地区は渋滞ひどい（予想時間の2倍）。", address:"滋賀県高島市安曇川町下小川2300-1", bathing:"隣接旅館「白浜荘」で入浴可（時間制限あり）", price:"約16,000〜22,000円（Aサイト湖岸サイト）", playground:"なし（近くにこどもの国あり）", shop:"充実（売店9:00〜20:00）", firewood:"1,000〜1,300円/束", rating:"★3.3 - いこーよ", checkin:"13:00", checkout:"12:00", distance:"約75km / 約1時間20分（高速・湖西道路）"},
+  {no:37, date:"2025/12/6", name:"ひよしフォレストリゾート山の家", pref:"京都府南丹市", revisit:false, stars:4, tags:["デッキサイト","温泉込み","レストラン美味"], memo:"森のデッキサイト。オートサイトだがそこに至る道が険しい。私の車では行けなかった。サイト近くのトイレが故障。風呂は入り放題（キャンプ代に込み）。店主がとても気さく。レストランの飯は美味い。デッキ用ペグが刺さりにくい！", address:"京都府南丹市日吉町尾畑シナ16", bathing:"場内温泉あり（入り放題、キャンプ料金に含む）", price:"約18,000〜24,000円（サイト料+温泉込み）", playground:"なし（デッキサイト・自然散策）", shop:"充実（売店7:00〜22:30）", firewood:"660円/束", rating:"不明", checkin:"13:00", checkout:"11:00", distance:"約55km / 約55分（高速）"},
+];
+
+let currentFilter = 'all';
+
+function stars(n) {
+  if (n === 0) return '<span style="color:#999">－ 中止</span>';
+  return '★'.repeat(n) + '<span style="opacity:0.25">★</span>'.repeat(5-n);
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  let filtered = camps.filter(c => {
+    if (currentFilter === 'revisit' && !c.revisit) return false;
+    if (currentFilter === 'star5' && c.stars !== 5) return false;
+    if (currentFilter === 'star4' && c.stars < 4) return false;
+    if (currentFilter === 'shiga' && !c.pref.includes('滋賀')) return false;
+    if (currentFilter === 'hyogo' && !c.pref.includes('兵庫')) return false;
+    if (currentFilter === 'kyoto' && !c.pref.includes('京都')) return false;
+    if (currentFilter === 'nara' && !c.pref.includes('奈良')) return false;
+    if (q) {
+      const text = [c.name, c.pref, c.memo, c.tags.join(' '), c.address].join(' ').toLowerCase();
+      if (!text.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (sort === 'rating_desc') filtered.sort((a,b) => b.stars - a.stars);
+  else if (sort === 'recent') filtered.sort((a,b) => b.no - a.no);
+  else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name, 'ja'));
+  else filtered.sort((a,b) => a.no - b.no);
+
+  document.getElementById('resultCount').textContent = filtered.length + '件表示';
+  renderList(filtered);
+}
+
+function renderList(list) {
+  const el = document.getElementById('campList');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="no-results">🔍 該当するキャンプ場が見つかりませんでした</div>';
+    return;
+  }
+  el.innerHTML = list.map(c => `
+    <div class="card ${c.revisit?'revisit':''} ${c.stars===0?'cancelled':''}" id="card-${c.no}" onclick="toggle(${c.no})">
+      <div class="card-header">
+        <div class="card-left">
+          <div class="card-number">#${c.no}</div>
+          <div class="card-name">${c.name}</div>
+          <div class="card-sub">
+            <span class="card-pref">${c.pref}</span>
+            <span class="card-date">📅 ${c.date}</span>
+          </div>
+        </div>
+        <div class="card-right">
+          <div class="stars">${stars(c.stars)}</div>
+          ${c.revisit ? '<span class="badge-revisit">🔁 リピート</span>' : ''}
+          ${c.stars===0 ? '<span class="badge-cancel">中止</span>' : ''}
+          <div class="chevron">▼</div>
+        </div>
+      </div>
+      <div class="tags">
+        ${c.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      <div class="card-details">
+        <div class="memo-box">💬 ${c.memo}</div>
+        <div class="info-grid">
+          <div class="info-item full">
+            <div class="info-label">📍 住所</div>
+            <div class="info-value">${c.address}</div>
+          </div>
+          <div class="info-item full">
+            <div class="info-label">🚗 高槻市郡家新町からの距離</div>
+            <div class="info-value">${c.distance}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🛁 入浴施設</div>
+            <div class="info-value">${c.bathing}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">💰 価格（4人・祝日目安）</div>
+            <div class="info-value">${c.price}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🎠 遊具</div>
+            <div class="info-value">${c.playground}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🛒 売店</div>
+            <div class="info-value">${c.shop}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🪵 薪の値段</div>
+            <div class="info-value">${c.firewood}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">⭐ ユーザー評価</div>
+            <div class="info-value">${c.rating}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🔑 チェックイン</div>
+            <div class="info-value">${c.checkin}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">🔓 チェックアウト</div>
+            <div class="info-value">${c.checkout}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggle(no) {
+  const card = document.getElementById('card-' + no);
+  card.classList.toggle('open');
+}
+
+// Initial render
+applyFilters();
+</script>
+</body>
+</html>
