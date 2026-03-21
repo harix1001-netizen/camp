@@ -10,7 +10,7 @@ body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#f0f
 header{background:linear-gradient(135deg,#2d5a27 0%,#4a7c40 50%,#3d6b35 100%);color:#fff;padding:28px 20px 22px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.3)}
 header h1{font-size:1.6rem;letter-spacing:0.05em;text-shadow:1px 1px 3px rgba(0,0,0,0.4)}
 header p{font-size:0.85rem;margin-top:6px;opacity:0.85}
-.nav-bar{background:#fff;border-bottom:2px solid #c5dfc0;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.nav-bar{background:#fff;border-bottom:2px solid #c5dfc0;padding:10px 16px;display:flex;align-items:center;gap:12px}
 .nav-bar a{color:#3d6b35;text-decoration:none;font-size:0.88rem;padding:4px 10px;border-radius:12px;border:1px solid #c5dfc0;transition:all .2s}
 .nav-bar a:hover{background:#3d6b35;color:#fff}
 .container{max-width:800px;margin:0 auto;padding:20px 16px}
@@ -19,7 +19,7 @@ header p{font-size:0.85rem;margin-top:6px;opacity:0.85}
 .card-header{background:linear-gradient(90deg,#f0f7ee,#fff);padding:14px 18px 10px;border-bottom:1px solid #e0eed9}
 .card-num{display:inline-block;background:#4a7c40;color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:10px;margin-bottom:6px}
 .is-news .card-num{background:#d4941a}
-.news-badge{display:inline-block;background:#d4941a;color:#fff;font-size:0.7rem;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.news-badge{display:inline-block;background:#d4941a;color:#fff;font-size:0.7rem;padding:2px 7px;border-radius:10px;margin-left:6px}
 .card-name{font-size:1.25rem;font-weight:bold;color:#2d5a27}
 .card-date{font-size:0.78rem;color:#888;margin-top:2px}
 .card-body{padding:14px 18px}
@@ -30,8 +30,6 @@ header p{font-size:0.85rem;margin-top:6px;opacity:0.85}
 .feature-box .ft-title{font-size:0.78rem;font-weight:bold;color:#4a7c40;margin-bottom:6px;letter-spacing:0.05em}
 .card-footer{padding:8px 18px 12px;text-align:right}
 .card-footer a{color:#4a7c40;font-size:0.82rem;text-decoration:none;border-bottom:1px dotted #4a7c40}
-.card-footer a:hover{color:#2d5a27}
-.empty-msg{text-align:center;color:#888;padding:40px;font-size:0.95rem}
 footer{text-align:center;padding:24px;font-size:0.8rem;color:#888;border-top:1px solid #d0e8c8;margin-top:10px}
 footer a{color:#4a7c40;text-decoration:none}
 </style>
@@ -48,41 +46,18 @@ footer a{color:#4a7c40;text-decoration:none}
   <div id="blog-list"></div>
 </div>
 <footer>
-  <p>harix1001-netizen / camp &nbsp;|&nbsp; <a href="camp.html">キャンプ履歴</a></p>
+  <p>harix1001-netizen / camp | <a href="camp.html">キャンプ履歴</a></p>
 </footer>
 <script>
 const blogEntries = [
-  {no:1, date:"2026/3/21", name:"スノーピーク箕面キャンプフィールド", pref:"大阪府", address:"大阪府箕面市下止々呂美1346", price:"6,600円〜/泊（サイト料）", checkin:"13:00", checkout:"12:00", bathing:"あり（温水シャワー）", playground:"あり（浅瀬水場）", shop:"あり（スノーピーク製品・食材）", firewood:"販売あり", rating:"★4.4", distance:"大阪市内から約40分", isNews:false, url:"https://sbs.snowpeak.co.jp/minoh/", feature:"大阪の中心部からわずか約40分でアクセスできる、箕面市のダム湖畔に広がるスノーピーク直営のキャンプフィールド。かつての棚田地形を最大限に活かした90区画のサイトは、落葉広葉樹の森に包まれた豊かな自然環境で、春の萌え立つ新緑・秋の鮮やかな紅葉・夏夜に飛び交うホタルと四季折々の表情を見せてくれる。場内には子どもが安全に遊べる浅瀬の水場もあり、ファミリーにも最適。すぐそばには「日本の滝百選」に選ばれた箕面大滝（落差33m）もあり周辺散策も充実。スノーピーク製品の豊富なレンタルと食材のみ持参すればOKの「手ぶらCAMPプラン」があり初心者も安心してデビューできる。地元特産「実生ゆず」の加工場が同敷地内に隣接するなど、自然・食文化・利便性を三拍子揃えた近畿圏随一のキャンプ場だ。"}
+  {no:1,date:"2026/3/21",name:"スノーピーク箕面キャンプフィールド",pref:"大阪府",address:"大阪府箕面市下止々呂美1346",price:"6,600円〜/泊",checkin:"13:00",checkout:"12:00",bathing:"あり（温水シャワー）",playground:"あり（浅瀬水場）",shop:"あり（スノーピーク製品）",firewood:"販売あり",rating:"★4.4",distance:"大阪市内から約40分",isNews:false,url:"https://sbs.snowpeak.co.jp/minoh/",feature:"大阪の中心部からわずか約40分でアクセスできる、箕面市のダム湖畔に広がるスノーピーク直営のキャンプフィールド。かつての棚田地形を最大限に活かした90区画のサイトは、落葉広葉樹の森に包まれた豊かな自然環境で、春の萌え立つ新緑・秋の鮮やかな紅葉・夏夜に飛び交うホタルと四季折々の表情を見せてくれる。場内には子どもが安全に遊べる浅瀬の水場もあり、ファミリーにも最適。すぐそばには日本の滝百選に選ばれた箕面大滝（落差33m）もあり周辺散策も充実。スノーピーク製品の豊富なレンタルと食材のみ持参すればOKの手ぶらCAMPプランがあり初心者も安心してデビューできる。地元特産の実生ゆずの加工場が同敷地内に隣接するなど、自然・食文化・利便性を三拍子揃えた近畿圏随一のキャンプ場だ。"}
 ];
-
 function renderBlog(){
   var el=document.getElementById('blog-list');
-  if(!blogEntries.length){el.innerHTML='<div class="empty-msg">まだエントリーがありません</div>';return;}
+  if(!blogEntries.length){el.innerHTML='<p style="text-align:center;color:#888;padding:40px">まだエントリーがありません</p>';return;}
   var sorted=[].concat(blogEntries).reverse();
   el.innerHTML=sorted.map(function(e){
-    return '<div class="entry-card'+(e.isNews?' is-news':'')+'">'
-      +'<div class="card-header">'
-      +'<div><span class="card-num">No.'+e.no+'</span>'+(e.isNews?'<span class="news-badge">🔔 リニューアル情報</span>':'')+'</div>'
-      +'<div class="card-name">'+e.name+'</div>'
-      +'<div class="card-date">'+e.date+' 掲載　'+e.pref+'</div>'
-      +'</div>'
-      +'<div class="card-body">'
-      +'<div class="info-grid">'
-      +'<div class="info-item"><span class="label">📍 住所</span>'+e.address+'</div>'
-      +'<div class="info-item"><span class="label">💰 料金</span>'+e.price+'</div>'
-      +'<div class="info-item"><span class="label">🕐 チェックイン</span>'+e.checkin+'</div>'
-      +'<div class="info-item"><span class="label">🕐 チェックアウト</span>'+e.checkout+'</div>'
-      +'<div class="info-item"><span class="label">🚿 入浴</span>'+e.bathing+'</div>'
-      +'<div class="info-item"><span class="label">🛝 遊び場</span>'+e.playground+'</div>'
-      +'<div class="info-item"><span class="label">🏪 売店</span>'+e.shop+'</div>'
-      +'<div class="info-item"><span class="label">🪵 薪</span>'+e.firewood+'</div>'
-      +'<div class="info-item"><span class="label">⭐ 評価</span>'+e.rating+'</div>'
-      +'<div class="info-item"><span class="label">🚗 アクセス</span>'+e.distance+'</div>'
-      +'</div>'
-      +'<div class="feature-box"><div class="ft-title">📝 このキャンプ場の特徴</div>'+e.feature+'</div>'
-      +'</div>'
-      +(e.url?'<div class="card-footer"><a href="'+e.url+'" target="_blank" rel="noopener">公式サイトを見る →</a></div>':'')
-      +'</div>';
+    return '<div class="entry-card'+(e.isNews?' is-news':'')+'"><div class="card-header"><div><span class="card-num">No.'+e.no+'</span>'+(e.isNews?'<span class="news-badge">🔔 リニューアル情報</span>':'')+'</div><div class="card-name">'+e.name+'</div><div class="card-date">'+e.date+' 掲載 '+e.pref+'</div></div><div class="card-body"><div class="info-grid"><div class="info-item"><span class="label">📍住所</span>'+e.address+'</div><div class="info-item"><span class="label">💰料金</span>'+e.price+'</div><div class="info-item"><span class="label">🕐チェックイン</span>'+e.checkin+'</div><div class="info-item"><span class="label">🕐チェックアウト</span>'+e.checkout+'</div><div class="info-item"><span class="label">🚿入浴</span>'+e.bathing+'</div><div class="info-item"><span class="label">🛝遊び場</span>'+e.playground+'</div><div class="info-item"><span class="label">🏪売店</span>'+e.shop+'</div><div class="info-item"><span class="label">🪵薪</span>'+e.firewood+'</div><div class="info-item"><span class="label">⭐評価</span>'+e.rating+'</div><div class="info-item"><span class="label">🚗アクセス</span>'+e.distance+'</div></div><div class="feature-box"><div class="ft-title">📝 このキャンプ場の特徴</div>'+e.feature+'</div></div>'+(e.url?'<div class="card-footer"><a href="'+e.url+'" target="_blank" rel="noopener">公式サイトを見る →</a></div>':'')+'</div>';
   }).join('');
 }
 renderBlog();
