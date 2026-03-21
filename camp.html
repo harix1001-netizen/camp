@@ -225,6 +225,46 @@
     cursor: pointer;
   }
   .result-count { margin-left: auto; font-size: 11px; color: var(--grey-text); }
+
+/* === 操作ボタン === */
+.action-buttons{display:flex;gap:8px;padding:12px 16px 10px;border-top:1px solid #e8d5b7;margin-top:8px;flex-wrap:wrap;}
+.btn-action{padding:6px 14px;border:none;border-radius:20px;cursor:pointer;font-size:0.82rem;font-weight:600;transition:all .2s;line-height:1.4;}
+.btn-comment{background:#e8f4f8;color:#2980b9;}.btn-comment:hover{background:#2980b9;color:white;}
+.btn-edit{background:#fef9e7;color:#e67e22;}.btn-edit:hover{background:#e67e22;color:white;}
+.btn-delete{background:#fdf2f2;color:#c0392b;}.btn-delete:hover{background:#c0392b;color:white;}
+.comment-count-badge{font-size:.72rem;background:#2980b9;color:white;border-radius:10px;padding:1px 7px;margin-left:5px;vertical-align:middle;}
+/* === モーダル共通 === */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:1000;justify-content:center;align-items:center;padding:20px;}
+.modal-box{background:white;border-radius:16px;padding:24px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-box h3{margin:0 0 14px;font-size:1.05rem;color:#3d2b1a;border-bottom:2px solid #e8d5b7;padding-bottom:10px;}
+.edit-modal-box{max-width:680px;}
+/* === コメント === */
+.comment-thread{max-height:200px;overflow-y:auto;margin-bottom:12px;background:#faf7f2;border-radius:8px;padding:8px;border:1px solid #e8d5b7;}
+.comment-item{padding:8px 10px;border-bottom:1px solid #e8d5b7;margin-bottom:4px;}
+.comment-item:last-child{border-bottom:none;margin-bottom:0;}
+.comment-meta{font-size:.72rem;color:#999;margin-bottom:3px;}
+.comment-text{font-size:.88rem;color:#333;line-height:1.55;white-space:pre-wrap;}
+.no-comments{text-align:center;color:#bbb;font-size:.85rem;padding:16px;margin:0;}
+.new-comment-area textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:.88rem;resize:vertical;box-sizing:border-box;font-family:inherit;min-height:80px;}
+.new-comment-area textarea:focus{outline:none;border-color:#c8a66a;}
+/* === 編集フォーム === */
+.edit-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.form-row{display:flex;flex-direction:column;gap:4px;}
+.form-row-full{grid-column:1/-1;}
+.form-row label{font-size:.78rem;color:#666;font-weight:600;}
+.form-row input,.form-row textarea{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:.88rem;font-family:inherit;width:100%;box-sizing:border-box;}
+.form-row input:focus,.form-row textarea:focus{outline:none;border-color:#c8a66a;}
+.form-row.cb-row{flex-direction:row;align-items:center;gap:6px;}
+.form-row.cb-row label{font-size:.88rem;color:#333;font-weight:normal;}
+/* === ボタン === */
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+.btn-save{background:#c8a66a;color:white;border:none;padding:10px 22px;border-radius:20px;cursor:pointer;font-weight:600;font-size:.9rem;}
+.btn-save:hover{background:#a8874a;}.btn-save:disabled{background:#ccc;cursor:default;}
+.btn-cancel{background:#f0f0f0;color:#666;border:none;padding:10px 22px;border-radius:20px;cursor:pointer;font-weight:600;font-size:.9rem;}
+.btn-cancel:hover{background:#ddd;}
+/* === ローディング === */
+#loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:2000;justify-content:center;align-items:center;display:none;}
+.loading-box{background:white;border-radius:12px;padding:24px 36px;font-size:1rem;color:#333;box-shadow:0 10px 30px rgba(0,0,0,.3);}
 </style>
 </head>
 <body>
@@ -435,6 +475,174 @@ function toggle(no) {
 
 // Initial render
 applyFilters();
+</script>
+
+<div id="comment-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('comment-modal')">
+  <div class="modal-box">
+    <h3>&#x1F4AC; コメント &#x2015; <span id="comment-camp-name"></span></h3>
+    <div id="comment-thread" class="comment-thread"></div>
+    <div class="new-comment-area">
+      <textarea id="new-comment-text" placeholder="コメントを追加..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('comment-modal')">キャンセル</button>
+        <button class="btn-save" id="btn-save-comment" onclick="saveComment()">&#x1F4BE; 保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="edit-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('edit-modal')">
+  <div class="modal-box edit-modal-box">
+    <h3>&#x270F;&#xFE0F; キャンプ情報を編集</h3>
+    <div class="edit-form">
+      <div class="form-row form-row-full"><label>キャンプ場名</label><input id="edit-name" type="text"></div>
+      <div class="form-row"><label>日付</label><input id="edit-date" type="text" placeholder="2025/1/1"></div>
+      <div class="form-row"><label>都道府県・市区町村</label><input id="edit-pref" type="text"></div>
+      <div class="form-row"><label>評価 (0&#x301C;5)</label><input id="edit-stars" type="number" min="0" max="5"></div>
+      <div class="form-row form-row-full"><label>タグ（カンマ区切り）</label><input id="edit-tags" type="text"></div>
+      <div class="form-row form-row-full"><label>メモ</label><textarea id="edit-memo" rows="3"></textarea></div>
+      <div class="form-row form-row-full"><label>住所</label><input id="edit-address" type="text"></div>
+      <div class="form-row form-row-full"><label>入浴施設</label><input id="edit-bathing" type="text"></div>
+      <div class="form-row"><label>料金</label><input id="edit-price" type="text"></div>
+      <div class="form-row"><label>遊具</label><input id="edit-playground" type="text"></div>
+      <div class="form-row"><label>売店</label><input id="edit-shop" type="text"></div>
+      <div class="form-row"><label>薪の値段</label><input id="edit-firewood" type="text"></div>
+      <div class="form-row form-row-full"><label>ユーザー評価</label><input id="edit-rating" type="text"></div>
+      <div class="form-row"><label>チェックイン</label><input id="edit-checkin" type="text"></div>
+      <div class="form-row"><label>チェックアウト</label><input id="edit-checkout" type="text"></div>
+      <div class="form-row form-row-full"><label>距離・所要時間</label><input id="edit-distance" type="text"></div>
+      <div class="form-row cb-row"><input id="edit-revisit" type="checkbox"><label for="edit-revisit">リピート訪問</label></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('edit-modal')">キャンセル</button>
+      <button class="btn-save" id="btn-save-edit" onclick="saveEdit()">&#x1F4BE; 保存（GitHub更新）</button>
+    </div>
+  </div>
+</div>
+<div id="loading-overlay"><div class="loading-box">&#x23F3; GitHubに保存中...</div></div>
+
+<script>
+(function(){
+  var _API='https://api.github.com/repos/harix1001-netizen/camp/contents/camp.html';
+  var _editNo=null,_cmtNo=null;
+  function _pat(){var p=localStorage.getItem('camp_pat');if(!p){p=prompt('GitHub Personal Access Tokenを入力してください（初回のみ）:');if(p)localStorage.setItem('camp_pat',p.trim());}return p;}
+  function _esc(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,' ').replace(/\r/g,'');}
+  function _ser(c){
+    var tags=(c.tags||[]).map(function(t){return '"'+_esc(t)+'"';}).join(', ');
+    var s='  {no:'+c.no+', date:"'+_esc(c.date)+'", name:"'+_esc(c.name)+'", pref:"'+_esc(c.pref)+'", revisit:'+(c.revisit?'true':'false')+', stars:'+c.stars+', tags:['+tags+'], memo:"'+_esc(c.memo)+'", address:"'+_esc(c.address)+'", bathing:"'+_esc(c.bathing)+'", price:"'+_esc(c.price)+'", playground:"'+_esc(c.playground)+'", shop:"'+_esc(c.shop)+'", firewood:"'+_esc(c.firewood)+'", rating:"'+_esc(c.rating)+'", checkin:"'+_esc(c.checkin)+'", checkout:"'+_esc(c.checkout)+'", distance:"'+_esc(c.distance)+'"';
+    if(c.comments&&c.comments.length>0){s+=', comments:'+JSON.stringify(c.comments);}
+    return s+'}';
+  }
+  function _loading(on){document.getElementById('loading-overlay').style.display=on?'flex':'none';}
+  async function _push(msg){
+    var pat=_pat();if(!pat){alert('PATが必要です');return;}
+    _loading(true);
+    try{
+      var r=await fetch(_API,{headers:{'Authorization':'token '+pat,'Accept':'application/vnd.github.v3+json'}});
+      var d=await r.json();
+      if(d.message){throw new Error(d.message);}
+      var html=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+      var sha=d.sha;
+      var cs=html.indexOf('const camps = [');
+      var em='];\n\nlet currentFilter';
+      var ei=html.indexOf(em);
+      if(cs<0||ei<0){throw new Error('marker not found');}
+      html=html.substring(0,cs)+'const camps = [\n'+camps.map(_ser).join(',\n')+'\n];'+html.substring(ei+2);
+      html=html.replace(/<span class="stat-badge">\u5168\d+\u4ef6<\/span>/,'<span class="stat-badge">\u5168'+camps.length+'\u4ef6<\/span>');
+      var enc=btoa(unescape(encodeURIComponent(html)));
+      var pr=await fetch(_API,{method:'PUT',headers:{'Authorization':'token '+pat,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({message:msg,content:enc,sha:sha,committer:{name:'\u64ad\u78e8\u8cb4\u53f2',email:'harix1001@gmail.com'}})});
+      var res=await pr.json();
+      _loading(false);
+      if(!res.commit){throw new Error(JSON.stringify(res).substring(0,200));}
+    }catch(e){_loading(false);throw e;}
+  }
+  window.openComment=function(no,e){
+    e.stopPropagation();_cmtNo=no;
+    var c=camps.find(function(x){return x.no===no;});
+    document.getElementById('comment-camp-name').textContent=c.name;
+    var coms=c.comments||[];
+    document.getElementById('comment-thread').innerHTML=coms.length===0?'<p class="no-comments">\u307e\u3060\u30b3\u30e1\u30f3\u30c8\u306f\u3042\u308a\u307e\u305b\u3093</p>':coms.map(function(cm){return '<div class="comment-item"><div class="comment-meta">'+cm.date+'<\/div><div class="comment-text">'+cm.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'<\/div><\/div>';}).join('');
+    document.getElementById('new-comment-text').value='';
+    document.getElementById('comment-modal').style.display='flex';
+  };
+  window.saveComment=async function(){
+    var txt=document.getElementById('new-comment-text').value.trim();
+    if(!txt){alert('\u30b3\u30e1\u30f3\u30c8\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044');return;}
+    var c=camps.find(function(x){return x.no===_cmtNo;});
+    if(!c.comments)c.comments=[];
+    var now=new Date();
+    c.comments.push({date:now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),text:txt});
+    var btn=document.getElementById('btn-save-comment');btn.disabled=true;
+    try{await _push('\u{1F4AC} \u30b3\u30e1\u30f3\u30c8\u8ffd\u52a0: '+c.name);window.closeModal('comment-modal');renderList();alert('\u2705 \u4fdd\u5b58\u3057\u307e\u3057\u305f\uff01');}
+    catch(er){c.comments.pop();alert('\u274c \u30a8\u30e9\u30fc: '+er.message);}
+    finally{btn.disabled=false;}
+  };
+  window.openEdit=function(no,e){
+    e.stopPropagation();_editNo=no;
+    var c=camps.find(function(x){return x.no===no;});
+    ['name','date','pref','memo','address','bathing','price','playground','shop','firewood','rating','checkin','checkout','distance'].forEach(function(f){var el=document.getElementById('edit-'+f);if(el)el.value=c[f]!==undefined?c[f]:'';});
+    document.getElementById('edit-stars').value=c.stars||0;
+    document.getElementById('edit-tags').value=(c.tags||[]).join(', ');
+    document.getElementById('edit-revisit').checked=!!c.revisit;
+    document.getElementById('edit-modal').style.display='flex';
+  };
+  window.saveEdit=async function(){
+    var c=camps.find(function(x){return x.no===_editNo;});if(!c)return;
+    var orig=JSON.parse(JSON.stringify(c));
+    ['name','date','pref','memo','address','bathing','price','playground','shop','firewood','rating','checkin','checkout','distance'].forEach(function(f){var el=document.getElementById('edit-'+f);if(el)c[f]=el.value.trim();});
+    c.stars=parseInt(document.getElementById('edit-stars').value)||0;
+    c.tags=document.getElementById('edit-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+    c.revisit=document.getElementById('edit-revisit').checked;
+    var btn=document.getElementById('btn-save-edit');btn.disabled=true;
+    try{await _push('\u270F\uFE0F \u7de8\u96c6: '+c.name);window.closeModal('edit-modal');renderList();alert('\u2705 \u4fdd\u5b58\u3057\u307e\u3057\u305f\uff01');}
+    catch(er){Object.assign(c,orig);alert('\u274c \u30a8\u30e9\u30fc: '+er.message);}
+    finally{btn.disabled=false;}
+  };
+  window.deleteCamp=async function(no,e){
+    e.stopPropagation();
+    var c=camps.find(function(x){return x.no===no;});
+    if(!confirm('\u300c'+c.name+'\u300d\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\n\u3053\u306e\u64cd\u4f5c\u306f\u5143\u306b\u623b\u305b\u307e\u305b\u3093\u3002'))return;
+    var idx=camps.findIndex(function(x){return x.no===no;});
+    var rm=camps.splice(idx,1)[0];
+    try{
+      await _push('\uD83D\uDDD1\uFE0F \u524a\u9664: '+rm.name);
+      renderList();
+      var b=document.querySelector('.stat-badge');if(b)b.textContent='\u5168'+camps.length+'\u4ef6';
+      alert('\u2705 \u300c'+rm.name+'\u300d\u3092\u524a\u9664\u3057\u307e\u3057\u305f\u3002');
+    }catch(er){camps.splice(idx,0,rm);alert('\u274c \u30a8\u30e9\u30fc: '+er.message);}
+  };
+  window.closeModal=function(id){var el=document.getElementById(id);if(el)el.style.display='none';};
+  function _addBtns(){
+    document.querySelectorAll('.camp-list .card').forEach(function(card){
+      var m=card.id&&card.id.match(/^card-(\d+)$/);
+      if(!m||card.querySelector('.action-buttons'))return;
+      var no=parseInt(m[1]);
+      var c=camps.find(function(x){return x.no===no;});
+      var cl='\uD83D\uDCAC \u30b3\u30e1\u30f3\u30c8'+(c&&c.comments&&c.comments.length>0?' <span class="comment-count-badge">'+c.comments.length+'<\/span>':'');
+      var d=document.createElement('div');d.className='action-buttons';
+      d.innerHTML='<button class="btn-action btn-comment" onclick="openComment('+no+',event)">'+cl+'<\/button><button class="btn-action btn-edit" onclick="openEdit('+no+',event)">&#x270F;&#xFE0F; \u7de8\u96c6<\/button><button class="btn-action btn-delete" onclick="deleteCamp('+no+',event)">&#x1F5D1;&#xFE0F; \u524a\u9664<\/button>';
+      card.appendChild(d);
+    });
+  }
+  var _oRL=window.renderList;
+  if(typeof _oRL==='function'){window.renderList=function(){_oRL();_addBtns();};}
+  var fr=document.querySelector('.filter-row');
+  if(fr&&!fr.querySelector('[data-filter="wishlist"]')){
+    var wb=document.createElement('button');wb.className='filter-btn';wb.setAttribute('data-filter','wishlist');wb.textContent='\uD83C\uDFAF \u884c\u304d\u305f\u3044';
+    wb.onclick=function(){setFilter('wishlist',this);};fr.appendChild(wb);
+  }
+  var _oAF=window.applyFilters;
+  window.applyFilters=function(){
+    if(window.currentFilter==='wishlist'){
+      document.querySelectorAll('.camp-list .card').forEach(function(card){
+        var m=card.id&&card.id.match(/^card-(\d+)$/);if(!m){card.style.display='';return;}
+        var c=camps.find(function(x){return x.no===parseInt(m[1]);});
+        card.style.display=(c&&c.tags&&c.tags.indexOf('\u884c\u304d\u305f\u3044')>=0)?'':'none';
+      });return;
+    }
+    if(_oAF)_oAF();
+  };
+  _addBtns();
+})();
 </script>
 </body>
 </html>
