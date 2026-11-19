@@ -1,0 +1,10 @@
+{
+  "name": "camp",
+  "private": true,
+  "description": "キャンプ手帳（過去のキャンプ履歴と週末おすすめ）",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "sync": "node scripts/sync-notion.mjs",
+    "start": "python3 -m http.server 8000"
+  }
+}

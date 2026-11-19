@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f5d3a">
+<title>キャンプ手帳</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>🏕️ キャンプ手帳</h1>
+  <p class="sub" id="updated">読み込み中…</p>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="weekend">週末おすすめ</button>
+    <button class="tab" role="tab" data-tab="history">キャンプ履歴</button>
+  </nav>
+</header>
+
+<main>
+  <section class="panel" id="panel-weekend" role="tabpanel">
+    <div class="section-head">
+      <h2>今週末のおすすめ（未訪問）</h2>
+      <p class="meta" id="weekend-date"></p>
+    </div>
+    <p class="hint">優先度・季節・北摂からの距離でおすすめ順に並べています。</p>
+    <div id="weekend-list" class="cards"></div>
+
+    <div class="section-head">
+      <h2>また行きたい</h2>
+      <p class="meta">過去の★4以上で、今の季節に合う場所</p>
+    </div>
+    <div id="revisit-list" class="cards"></div>
+
+    <details class="more">
+      <summary>その他の候補 <span id="weekend-rest-count"></span></summary>
+      <div id="weekend-rest" class="cards"></div>
+    </details>
+  </section>
+
+  <section class="panel" id="panel-history" role="tabpanel" hidden>
+    <div id="stats" class="stats"></div>
+
+    <div class="filters">
+      <input id="f-query" type="search" placeholder="キャンプ場名・メモで検索" aria-label="検索">
+      <div class="filter-row">
+        <select id="f-pref" aria-label="都道府県"><option value="">都道府県：すべて</option></select>
+        <select id="f-rating" aria-label="評価">
+          <option value="0">評価：すべて</option>
+          <option value="5">★5のみ</option>
+          <option value="4">★4以上</option>
+          <option value="3">★3以上</option>
+        </select>
+        <select id="f-kids" aria-label="子ども評価"><option value="">子ども評価：すべて</option></select>
+        <select id="f-sort" aria-label="並べ替え">
+          <option value="new">新しい順</option>
+          <option value="old">古い順</option>
+          <option value="rating">評価が高い順</option>
+        </select>
+      </div>
+      <p class="meta"><span id="history-count"></span></p>
+    </div>
+
+    <div id="history-list"></div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <a href="camp.html">旧・キャンプ履歴</a>
+  <a href="kinki-blog.html">近畿のおすすめキャンプ場ブログ</a>
+</footer>
+
+<script src="js/logic.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
