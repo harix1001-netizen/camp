@@ -39,6 +39,7 @@
   </section>
 
   <section class="panel" id="panel-history" role="tabpanel" hidden>
+    <button type="button" class="btn btn-primary btn-block" id="open-record">＋ キャンプを記録する</button>
     <div id="stats" class="stats"></div>
 
     <div class="filters">
@@ -65,12 +66,80 @@
   </section>
 </main>
 
+<dialog id="record-dialog" class="record-dialog" aria-labelledby="record-title">
+  <form id="record-form" novalidate>
+    <div class="dialog-head">
+      <h2 id="record-title">キャンプを記録する</h2>
+      <button type="button" class="icon-btn" id="close-record" aria-label="閉じる">×</button>
+    </div>
+    <p class="hint">送信するとNotionの「キャンプ記録」に追加され、1〜2分でこのアプリにも反映されます。</p>
+
+    <details id="token-details" class="token-box">
+      <summary>GitHubトークンの設定</summary>
+      <div id="token-set" hidden>
+        <p class="meta">このブラウザに設定済みです。</p>
+        <button type="button" class="btn" id="token-clear">トークンを削除</button>
+      </div>
+      <div id="token-form">
+        <p class="meta">初回だけ必要です。GitHubの Settings → Developer settings → Fine-grained tokens で、リポジトリ <code>camp</code> だけを選び、権限「Actions: Read and write」で作ったトークンを貼り付けてください。トークンはこのブラウザの中だけに保存されます。</p>
+        <div class="inline">
+          <input type="password" id="token-input" autocomplete="off" placeholder="github_pat_…" aria-label="GitHubトークン">
+          <button type="button" class="btn" id="token-save">保存</button>
+        </div>
+      </div>
+    </details>
+
+    <label class="field">キャンプ場名 <span class="req">必須</span>
+      <input id="r-name" list="r-name-list" required autocomplete="off" placeholder="過去の場所や未訪問リストから選べます">
+      <datalist id="r-name-list"></datalist>
+      <span class="meta" id="r-name-hint"></span>
+    </label>
+    <div class="grid2">
+      <label class="field">訪問日 <span class="req">必須</span><input type="date" id="r-date" required></label>
+      <label class="field">泊数<input type="number" id="r-nights" min="0" max="30" value="1" inputmode="numeric"></label>
+    </div>
+
+    <fieldset class="field">
+      <legend>評価</legend>
+      <div class="rating-input">
+        <input type="radio" name="rating" id="rate5" value="5"><label for="rate5" title="5">★</label>
+        <input type="radio" name="rating" id="rate4" value="4"><label for="rate4" title="4">★</label>
+        <input type="radio" name="rating" id="rate3" value="3"><label for="rate3" title="3">★</label>
+        <input type="radio" name="rating" id="rate2" value="2"><label for="rate2" title="2">★</label>
+        <input type="radio" name="rating" id="rate1" value="1"><label for="rate1" title="1">★</label>
+      </div>
+    </fieldset>
+
+    <div class="grid2">
+      <label class="field">子ども評価<select id="r-kids"><option value="">未選択</option></select></label>
+      <label class="field">天気<select id="r-weather"><option value="">未選択</option></select></label>
+      <label class="field">都道府県<select id="r-pref"><option value="">未選択</option></select></label>
+      <label class="field">北摂から<select id="r-access"><option value="">未選択</option></select></label>
+      <label class="field">料金（円・1泊）<input type="number" id="r-price" min="0" inputmode="numeric"></label>
+    </div>
+
+    <label class="field">メモ・感想<textarea id="r-memo" rows="5" placeholder="良かった点、注意点、ごはんなど"></textarea></label>
+    <label class="field">持ち物メモ<textarea id="r-gear" rows="2" placeholder="次回のために"></textarea></label>
+
+    <fieldset class="field"><legend>設備</legend><div class="checks" id="r-facilities"></div></fieldset>
+    <fieldset class="field"><legend>おすすめシーズン</legend><div class="checks" id="r-seasons"></div></fieldset>
+
+    <label class="field">なっぷURL<input type="url" id="r-nap" inputmode="url" placeholder="https://www.nap-camp.com/…"></label>
+    <label class="field">公式サイトURL<input type="url" id="r-site" inputmode="url"></label>
+
+    <p id="r-status" class="status" role="status" aria-live="polite"></p>
+    <button type="submit" class="btn btn-primary btn-block" id="r-submit">Notionに記録する</button>
+  </form>
+</dialog>
+
 <footer class="app-footer">
   <a href="camp.html">旧・キャンプ履歴</a>
   <a href="kinki-blog.html">近畿のおすすめキャンプ場ブログ</a>
 </footer>
 
 <script src="js/logic.js"></script>
+<script src="js/record.js"></script>
+<script src="js/form.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
