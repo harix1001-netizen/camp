@@ -132,11 +132,15 @@
     const list = L.filterCamps(state.camps, state.filters);
     document.getElementById('history-count').textContent = list.length + '件';
     const el = document.getElementById('history-list');
+    const waiting = window.CampForm ? window.CampForm.pending() : [];
+    const pendingHtml = waiting
+      .map((p) => '<div class="card pending"><span class="chip chip-pending">反映待ち</span> ' + esc(fmtDate(p.date)) + ' ' + esc(p.name) + '</div>')
+      .join('');
     if (!list.length) {
-      el.innerHTML = '<p class="empty">条件に合う記録がありません。</p>';
+      el.innerHTML = pendingHtml + '<p class="empty">条件に合う記録がありません。</p>';
       return;
     }
-    let html = '';
+    let html = pendingHtml;
     let year = null;
     const byDate = state.filters.sort !== 'rating';
     for (const c of list) {
@@ -225,6 +229,7 @@
       renderWeekend();
       renderStats();
       bindHistoryControls();
+      if (window.CampForm) window.CampForm.init({ camps: state.camps, spots: state.spots, onChange: renderHistory });
       renderHistory();
     } catch (e) {
       document.querySelector('main').insertAdjacentHTML(

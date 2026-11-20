@@ -1,0 +1,48 @@
+name: キャンプ記録を追加
+
+# アプリの「＋ 記録する」フォームから呼ばれる。
+# Notionに1件追加したあと、Notionから data/ を同期してコミットする。
+on:
+  workflow_dispatch:
+    inputs:
+      record:
+        description: '記録（JSON）'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+# 週次同期と同時に push しないように直列化する
+concurrency:
+  group: notion-data
+  cancel-in-progress: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Notionに追加
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          RECORD: ${{ inputs.record }}
+        run: node scripts/add-notion-record.mjs
+      - name: Notionから同期
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: node scripts/sync-notion.mjs
+      - name: コミット
+        run: |
+          if git diff --quiet -- data/; then
+            echo "データに変更なし"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "キャンプ記録を追加（アプリから）"
+          git push
